@@ -1,0 +1,11 @@
+portfolio/
+__pycache__/
+
+#  Data files (too large for git)
+data/
+
+# Trained models
+models/*.pkl
+
+# Outputs
+outputs/
