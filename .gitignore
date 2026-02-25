@@ -1,4 +1,11 @@
-portfolio/
+# Ignore everything inside portfolio
+portfolio/*
+
+# Allow these specific files
+!portfolio/allocator.py
+!portfolio/goals.py
+!portfolio/optimizer.py
+
 __pycache__/
 
 #  Data files (too large for git)
