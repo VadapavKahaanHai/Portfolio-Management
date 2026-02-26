@@ -28,7 +28,7 @@ STOCK_UNIVERSE = [
 ]
 
 INDEX_TICKER   = "^NSEI"          # NIFTY 50
-RISKFREE_RATE  = 0.065            # ~6.5% (current Indian 10yr yield)
+RISKFREE_RATE  = 0.045            # ~6.5% (current Indian 10yr yield)
 
 # ─────────────────────────────────────────────
 # DATA
@@ -58,9 +58,9 @@ RANDOM_STATE    = 42
 # ─────────────────────────────────────────────
 # PORTFOLIO OPTIMIZATION
 # ─────────────────────────────────────────────
-MAX_WEIGHT      = 0.20            # max 20% in any single stock
-MIN_WEIGHT      = 0.02            # min 2% if selected
-MAX_SECTOR_WEIGHT = 0.35          # max 35% in any single sector
+MAX_WEIGHT      = 0.12           # max 20% in any single stock
+MIN_WEIGHT      = 0.04            # min 2% if selected
+MAX_SECTOR_WEIGHT = 0.25          # max 35% in any single sector
 MIN_STOCKS      = 8
 MAX_STOCKS      = 20
 N_PORTFOLIOS    = 500             # Monte Carlo random portfolios
