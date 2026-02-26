@@ -28,13 +28,14 @@ STOCK_UNIVERSE = [
 ]
 
 INDEX_TICKER   = "^NSEI"          # NIFTY 50
-RISKFREE_RATE  = 0.045            # ~6.5% (current Indian 10yr yield)
+# RISKFREE_RATE  = 0.045          # ~6.5% (current Indian 10yr yield)
+RISKFREE_RATE  = 0.065   # Indian 10-yr G-Sec yield ~6.5% (2024)
 
 # ─────────────────────────────────────────────
 # DATA
 # ─────────────────────────────────────────────
 DATA_START      = "2018-01-01"
-DATA_END        = "2024-12-31"
+DATA_END        = "2025-12-31"   # or use: pd.Timestamp.today().strftime("%Y-%m-%d")
 DATA_DIR        = "data/"
 MISSING_THRESH  = 0.05            # drop stock if >5% data missing
 MIN_PRICE       = 10.0            # penny stock filter (₹)
@@ -50,7 +51,8 @@ CORR_WINDOW     = 63              # rolling correlation window
 # ─────────────────────────────────────────────
 # ML MODELS
 # ─────────────────────────────────────────────
-RETURN_HORIZON  = 21              # predict next N trading days return
+# RETURN_HORIZON  = 21              # predict next N trading days return
+RETURN_HORIZON  = 252             # predict next N trading days return
 N_RISK_CLUSTERS = 3               # Low / Medium / High
 CV_SPLITS       = 5               # time-series cross-validation splits
 RANDOM_STATE    = 42

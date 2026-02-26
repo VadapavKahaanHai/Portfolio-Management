@@ -287,15 +287,26 @@ def project_corpus(
     sip      = goal_config.monthly_sip
     n_years  = goal_config.investment_horizon_years
     profile  = GOAL_PROFILES[goal_config.goal_type]
-    r        = portfolio_expected_return
+    r        = portfolio_expected_return       # equity return
     vol      = portfolio_volatility
     infl     = INFLATION_RATE if profile["inflation_adjustment"] else 0.0
 
-    # ── Lump sum projection ────────────────────────────────────────────────
-    lump_final = lump * ((1 + r) ** n_years)
+    # Split lump sum into equity and debt portions
+    equity_pct  = get_equity_allocation(goal_config)   # e.g. 0.65
+    debt_pct    = 1.0 - equity_pct                     # e.g. 0.35
+    lump_equity = lump * equity_pct
+    lump_debt   = lump * debt_pct
+
+    # Compound each separately
+    lump_equity_final = lump_equity * ((1 + r) ** n_years)
+    lump_debt_final   = lump_debt   * ((1 + DEBT_RETURN) ** n_years)
+    lump_final        = lump_equity_final + lump_debt_final
+
+    # Blended return for SIP projection
+    r_blended = r * equity_pct + DEBT_RETURN * debt_pct
 
     # ── SIP projection (monthly compounding) ──────────────────────────────
-    r_monthly = (1 + r) ** (1/12) - 1
+    r_monthly = (1 + r_blended) ** (1/12) - 1
     if r_monthly > 0 and sip > 0:
         sip_final = sip * (((1 + r_monthly) ** (n_years * 12) - 1) / r_monthly) * (1 + r_monthly)
     else:
@@ -314,11 +325,11 @@ def project_corpus(
     mu_log  = (r - 0.5 * vol**2) * n_years
     sig_log = vol * math.sqrt(n_years)
 
-    p10  = lump * math.exp(mu_log - 1.28 * sig_log) + sip_final  # 10th percentile
-    p25  = lump * math.exp(mu_log - 0.674 * sig_log) + sip_final
-    p50  = lump * math.exp(mu_log) + sip_final                    # median
-    p75  = lump * math.exp(mu_log + 0.674 * sig_log) + sip_final
-    p90  = lump * math.exp(mu_log + 1.28 * sig_log) + sip_final   # 90th percentile
+    p10  = lump_equity * math.exp(mu_log - 1.28 * sig_log)  + lump_debt_final + sip_final
+    p25  = lump_equity * math.exp(mu_log - 0.674 * sig_log) + lump_debt_final + sip_final
+    p50  = lump_equity * math.exp(mu_log)                   + lump_debt_final + sip_final
+    p75  = lump_equity * math.exp(mu_log + 0.674 * sig_log) + lump_debt_final + sip_final
+    p90  = lump_equity * math.exp(mu_log + 1.28 * sig_log)  + lump_debt_final + sip_final
 
     # ── CAGR ──────────────────────────────────────────────────────────────
     cagr = (total_corpus / max(total_invested, 1)) ** (1 / n_years) - 1

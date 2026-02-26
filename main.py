@@ -10,7 +10,8 @@ Usage:
   python main.py --amount 300000 --risk Medium --goal marriage --years 4 --sip 5000
   python main.py --amount 200000 --risk Low --goal savings --years 3
 """
-
+import matplotlib
+matplotlib.use('Agg')   # Non-interactive backend, no Tcl/Tk needed
 import argparse
 import os
 import sys
@@ -81,8 +82,13 @@ def run_pipeline(
     # ── Validation warnings ────────────────────────────────────────────────
     warnings_list = validate_goal_inputs(goal_type, investment_years, amount, user_risk)
 
-    # ── Resolve effective risk ─────────────────────────────────────────────
+ # ── Resolve effective risk ─────────────────────────────────────────────
     effective_risk   = resolve_effective_risk(goal_config)
+    if effective_risk != user_risk:
+        print(f"\n   ℹ   Risk adjusted: {user_risk} → {effective_risk}")
+        print(f"      Reason: '{goal_type}' goal with {investment_years}yr horizon")
+        print(f"      warrants {effective_risk} risk to protect your corpus.")
+    
     goal_constraints = get_goal_constraints(goal_config)
     equity_pct       = goal_constraints["equity_allocation"] * 100
     profile          = GOAL_PROFILES[goal_type]
@@ -138,10 +144,23 @@ def run_pipeline(
     # STEP 5: Return Prediction
     # ──────────────────────────────────────────────────────────────────────
     print("\n[STEP 5] Expected Return Estimation (ML)")
+    # Dynamic horizon: match prediction window to investment horizon
+    if investment_years <= 2:
+        horizon = 63    # 3 months
+    elif investment_years <= 5:
+        horizon = 126   # 6 months
+    else:
+        horizon = 252   # 1 year (reliable max signal)
     model_path = f"models/return_model_{horizon}d.pkl"
 
     import joblib
     if os.path.exists(model_path) and not force_refresh:
+        import time
+        model_age_days = (time.time() - os.path.getmtime(model_path)) / 86400
+        if model_age_days > 30:
+            print(f"  ⚠  Model is {model_age_days:.0f} days old. Run with --refresh to retrain.")
+        print(f"  [Cache] Loading model from {model_path}")
+        model_bundle = joblib.load(model_path)
         print(f"  [Cache] Loading model from {model_path}")
         model_bundle = joblib.load(model_path)
     else:
@@ -157,6 +176,9 @@ def run_pipeline(
         model_bundle["feature_cols"] = list(X.columns)
 
     mu_hat = predict_expected_returns(feature_table, model_bundle)
+
+    mu_hat = mu_hat.reindex(candidate_stocks)
+    mu_hat = mu_hat.fillna(mu_hat.median())   # fill any missing with median
 
     # ──────────────────────────────────────────────────────────────────────
     # STEP 6: Covariance

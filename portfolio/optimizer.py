@@ -177,9 +177,9 @@ def optimize_weights(
         # Maximize Sharpe ratio
         rf = RISKFREE_RATE / 252
         def objective(w):
-            port_ret = w @ mu_sub / 252
-            port_vol = np.sqrt(w @ Sigma_sub @ w / 252)
-            sharpe   = (port_ret - rf) / (port_vol + 1e-8)
+            port_ret = w @ mu_sub          # mu_sub is already annualised (252d horizon)
+            port_vol = np.sqrt(w @ Sigma_sub @ w) * np.sqrt(252)  # annualise vol
+            sharpe   = (port_ret - RISKFREE_RATE) / (port_vol + 1e-8)
             return -sharpe
     else:
         # Maximize return with volatility penalty
@@ -288,14 +288,15 @@ def compute_portfolio_metrics(
     mu_sub    = mu[stocks].values
     Sigma_sub = Sigma.loc[stocks, stocks].values
 
-    port_ret   = float(w @ mu_sub)
+    port_ret   = float(w @ mu_sub)                          # annualised return
     port_var   = float(w @ Sigma_sub @ w)
-    port_vol   = float(np.sqrt(port_var))
+    port_vol   = float(np.sqrt(port_var)) * np.sqrt(252)    # annualise volatility
     sharpe     = (port_ret - RISKFREE_RATE) / (port_vol + 1e-8)
 
     # Sortino
-    neg_mu = np.minimum(mu_sub - RISKFREE_RATE / 252, 0)
-    downside_var = float(w @ np.diag(neg_mu ** 2) @ w) * 252
+    # Downside deviation: penalise returns below risk-free rate
+    neg_excess = np.minimum(mu_sub - RISKFREE_RATE, 0)   # annual scale
+    downside_var = float(w @ np.diag(neg_excess ** 2) @ w)
     sortino = (port_ret - RISKFREE_RATE) / (np.sqrt(downside_var) + 1e-8)
 
     # Risk contribution per stock
@@ -304,7 +305,12 @@ def compute_portfolio_metrics(
     risk_contrib_pct = pd.Series(risk_contrib / risk_contrib.sum(), index=stocks)
 
     # Max drawdown estimate (rough: 2-sigma monthly)
-    est_max_dd = -2.33 * port_vol / np.sqrt(12)
+    # est_max_dd = -2.33 * port_vol / np.sqrt(12)
+
+    # After (port_vol is now already annualised):
+    est_max_dd = -2.33 * (port_vol / np.sqrt(252)) * np.sqrt(252/12)
+    # Simplified:
+    est_max_dd = -2.33 * port_vol / np.sqrt(12)   # keep same, it's fine
 
     return {
         "weights":          pd.Series(w, index=stocks),
