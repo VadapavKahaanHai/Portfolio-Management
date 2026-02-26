@@ -338,7 +338,8 @@ def project_corpus(
     yearly = []
     current_val = lump
     for yr in range(1, n_years + 1):
-        current_val = current_val * (1 + r) + sip * 12 * (1 + r_monthly * 6)
+        # current_val = current_val * (1 + r) + sip * 12 * (1 + r_monthly * 6)
+        current_val = current_val * (1 + r_blended) + sip * 12 * (1 + r_monthly * 6)
         real_val    = current_val / ((1 + infl) ** yr)
         invested_so_far = lump + sip * 12 * yr
         yearly.append({

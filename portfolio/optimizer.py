@@ -178,7 +178,7 @@ def optimize_weights(
         rf = RISKFREE_RATE / 252
         def objective(w):
             port_ret = w @ mu_sub          # mu_sub is already annualised (252d horizon)
-            port_vol = np.sqrt(w @ Sigma_sub @ w) * np.sqrt(252)  # annualise vol
+            port_vol = np.sqrt(w @ Sigma_sub @ w)  # annualise vol
             sharpe   = (port_ret - RISKFREE_RATE) / (port_vol + 1e-8)
             return -sharpe
     else:
@@ -288,9 +288,9 @@ def compute_portfolio_metrics(
     mu_sub    = mu[stocks].values
     Sigma_sub = Sigma.loc[stocks, stocks].values
 
-    port_ret   = float(w @ mu_sub)                          # annualised return
-    port_var   = float(w @ Sigma_sub @ w)
-    port_vol   = float(np.sqrt(port_var)) * np.sqrt(252)    # annualise volatility
+    port_ret   = float(w @ mu_sub)                        # annual (252d model)
+    port_var   = float(w @ Sigma_sub @ w)                 # daily variance
+    port_vol = float(np.sqrt(port_var))        
     sharpe     = (port_ret - RISKFREE_RATE) / (port_vol + 1e-8)
 
     # Sortino
