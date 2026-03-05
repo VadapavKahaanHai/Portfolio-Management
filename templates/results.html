@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio Results — {{ goal_type|title }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:      #0a0e17;
+      --surface: #111827;
+      --surface2:#162032;
+      --border:  #1e2d45;
+      --accent:  #00e5a0;
+      --accent2: #0ea5e9;
+      --warn:    #f59e0b;
+      --danger:  #ef4444;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --font:    'Syne', sans-serif;
+      --mono:    'DM Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.25;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── TOPBAR ─────────────────────────────────────── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10,14,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-brand {
+      font-weight: 800;
+      font-size: 1rem;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: 1px solid;
+    }
+
+    .badge-green  { background: rgba(0,229,160,0.1);  border-color: rgba(0,229,160,0.3);  color: var(--accent); }
+    .badge-blue   { background: rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.3); color: var(--accent2);}
+    .badge-warn   { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warn);   }
+
+    .btn-back {
+      padding: 0.4rem 1rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── LAYOUT ─────────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── HERO METRICS ───────────────────────────────── */
+    .hero {
+      margin-bottom: 2rem;
+    }
+
+    .hero-title {
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-heading {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-heading span { color: var(--accent); }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .metric-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .metric-card:nth-child(1) { animation-delay: 0.05s; }
+    .metric-card:nth-child(2) { animation-delay: 0.10s; }
+    .metric-card:nth-child(3) { animation-delay: 0.15s; }
+    .metric-card:nth-child(4) { animation-delay: 0.20s; }
+    .metric-card:nth-child(5) { animation-delay: 0.25s; }
+
+    .metric-card.highlight {
+      border-color: rgba(0,229,160,0.3);
+      background: linear-gradient(135deg, rgba(0,229,160,0.06), var(--surface));
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    .metric-value.neutral { color: var(--text); }
+    .metric-value.warn    { color: var(--warn); }
+    .metric-value.danger  { color: var(--danger); }
+
+    .metric-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      font-family: var(--mono);
+    }
+
+    /* ── MAIN GRID ──────────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .wide { grid-column: 1 / -1; }
+
+    /* ── CARDS ──────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      animation: fadeUp 0.5s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,160,0.4), transparent);
+    }
+
+    .card-title {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── ALLOCATION TABLE ───────────────────────────── */
+    .alloc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .alloc-table th {
+      font-size: 0.68rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .alloc-table td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid rgba(30,45,69,0.5);
+      font-family: var(--mono);
+      font-size: 0.825rem;
+      vertical-align: middle;
+    }
+
+    .alloc-table tr:last-child td { border-bottom: none; }
+
+    .alloc-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .ticker-badge {
+      background: rgba(0,229,160,0.08);
+      border: 1px solid rgba(0,229,160,0.2);
+      border-radius: 6px;
+      padding: 0.15rem 0.5rem;
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 0.78rem;
+    }
+
+    /* Weight bar */
+    .weight-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .weight-bar {
+      height: 4px;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      min-width: 4px;
+    }
+
+    /* ── ALLOCATION SPLIT ───────────────────────────── */
+    .split-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .split-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .split-pct {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+
+    .split-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .split-amount {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      margin-top: 0.25rem;
+    }
+
+    /* ── CORPUS PROJECTION ──────────────────────────── */
+    .projection-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .proj-item { text-align: center; }
+
+    .proj-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+
+    .proj-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── CONFIDENCE TABLE ───────────────────────────── */
+    .conf-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .conf-table td {
+      padding: 0.5rem 0;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      border-bottom: 1px solid rgba(30,45,69,0.4);
+    }
+
+    .conf-table td:last-child { text-align: right; color: var(--text); }
+
+    .conf-table tr:last-child td { border-bottom: none; }
+
+    /* ── RISK CONTRIBUTORS ──────────────────────────── */
+    .risk-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(30,45,69,0.4);
+    }
+
+    .risk-item:last-child { border-bottom: none; }
+
+    .risk-bar-outer {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 100px;
+      margin: 0 1rem;
+      overflow: hidden;
+    }
+
+    .risk-bar-inner {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--warn), var(--danger));
+    }
+
+    .risk-pct {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--warn);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* ── CHART IMAGES ───────────────────────────────── */
+    .chart-img-wrap {
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    .chart-img-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    /* ── CANVAS CHARTS ──────────────────────────────── */
+    .canvas-wrap {
+      position: relative;
+      height: 220px;
+    }
+
+    .canvas-pie { height: 200px; }
+
+    /* ── DISCLAIMER ─────────────────────────────────── */
+    .disclaimer {
+      margin-top: 3rem;
+      padding: 1rem 1.5rem;
+      background: rgba(245,158,11,0.05);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── SCROLLBAR ──────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">◆ Portfolio AI</div>
+  <div class="topbar-meta">
+    <span class="badge badge-green">{{ goal_type|upper }}</span>
+    <span class="badge badge-blue">{{ effective_risk }} RISK</span>
+    <span class="badge badge-warn">{{ investment_years }}Y HORIZON</span>
+    <a href="/" class="btn-back">← New Analysis</a>
+  </div>
+</header>
+
+<main class="page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-title">Analysis Complete · {{ n_stocks }} stocks selected</div>
+    <h1 class="hero-heading">
+      Expected <span>{{ expected_return }}%</span> annual return<br>
+      across a ₹{{ equity_pct }}% equity allocation
+    </h1>
+
+    <!-- KEY METRICS -->
+    <div class="metrics-grid">
+      <div class="metric-card highlight">
+        <div class="metric-label">Expected Return</div>
+        <div class="metric-value">{{ expected_return }}%</div>
+        <div class="metric-sub">Annualised · ML prediction</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Sharpe Ratio</div>
+        <div class="metric-value {% if sharpe|float > 0.5 %}{% else %}warn{% endif %}">{{ sharpe }}</div>
+        <div class="metric-sub">Risk-adjusted return</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Volatility</div>
+        <div class="metric-value neutral">{{ volatility }}%</div>
+        <div class="metric-sub">Annualised std dev</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Max Drawdown</div>
+        <div class="metric-value warn">{{ max_drawdown }}%</div>
+        <div class="metric-sub">Estimated worst case</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Sortino Ratio</div>
+        <div class="metric-value neutral">{{ sortino }}</div>
+        <div class="metric-sub">Downside risk adjusted</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROW 1: Allocation split + Corpus Projection -->
+  <div class="main-grid">
+
+    <!-- Asset Split -->
+    <div class="card">
+      <div class="card-title">Asset Allocation</div>
+      <div class="split-row">
+        <div class="split-item">
+          <div class="split-pct" style="color: var(--accent)">{{ equity_pct }}%</div>
+          <div class="split-label">Equity</div>
+          <div class="split-amount">{{ equity_amount }}</div>
+        </div>
+        <div class="split-item">
+          <div class="split-pct" style="color: var(--accent2)">{{ debt_pct }}%</div>
+          <div class="split-label">Debt / FD</div>
+          <div class="split-amount">{{ debt_amount }}</div>
+        </div>
+      </div>
+      <!-- Pie Chart -->
+      <div class="canvas-wrap canvas-pie">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Corpus Projection -->
+    <div class="card">
+      <div class="card-title">Corpus Projection · {{ investment_years }} Years</div>
+      <div class="projection-summary">
+        <div class="proj-item">
+          <span class="proj-val">{{ total_corpus }}</span>
+          <span class="proj-label">Expected Corpus</span>
+        </div>
+        <div class="proj-item">
+          <span class="proj-val" style="color:var(--accent2)">{{ cagr }}%</span>
+          <span class="proj-label">CAGR</span>
+        </div>
+        <div class="proj-item">
+          <span class="proj-val" style="color:var(--warn)">{{ wealth_multiple }}x</span>
+          <span class="proj-label">Wealth Multiple</span>
+        </div>
+      </div>
+      <!-- Line Chart -->
+      <div class="canvas-wrap">
+        <canvas id="corpusChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Confidence Range + Risk Contributors -->
+  <div class="main-grid">
+
+    <div class="card">
+      <div class="card-title">Confidence Range (Equity Portion)</div>
+      <table class="conf-table">
+        <tr><td style="color:var(--danger)">Pessimistic (P10)</td><td>{{ p10 }}</td></tr>
+        <tr><td style="color:var(--warn)">Conservative (P25)</td><td>{{ p25 }}</td></tr>
+        <tr><td style="color:var(--accent)">Base Case (P50)</td><td>{{ p50 }}</td></tr>
+        <tr><td style="color:var(--accent2)">Optimistic (P75)</td><td>{{ p75 }}</td></tr>
+        <tr><td style="color:#a78bfa">Bull Case (P90)</td><td>{{ p90 }}</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Top Risk Contributors</div>
+      {% for item in risk_contrib %}
+      <div class="risk-item">
+        <span class="ticker-badge">{{ item.stock }}</span>
+        <div class="risk-bar-outer">
+          <div class="risk-bar-inner" style="width: {{ item.pct }}"></div>
+        </div>
+        <span class="risk-pct">{{ item.pct }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- ROW 3: Full Allocation Table -->
+  <div class="card wide" style="margin-bottom: 1.5rem; animation-delay: 0.3s;">
+    <div class="card-title">Stock Allocation — ₹{{ equity_amount }} Equity Portion</div>
+    <div style="overflow-x: auto;">
+      <table class="alloc-table">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Shares</th>
+            <th>Price</th>
+            <th>Invested</th>
+            <th>Weight</th>
+            <th style="width:120px">Bar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in allocation %}
+          <tr>
+            <td><span class="ticker-badge">{{ row.ticker }}</span></td>
+            <td>{{ row.shares }}</td>
+            <td>{{ row.price }}</td>
+            <td>{{ row.invested }}</td>
+            <td>{{ row.weight }}</td>
+            <td>
+              <div class="weight-bar-wrap">
+                <div class="weight-bar" style="width: {{ row.weight }}"></div>
+                <span style="font-size:0.7rem; color:var(--muted)">{{ row.weight }}</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ROW 4: ML Charts from pipeline -->
+  <div class="main-grid" style="margin-bottom: 1.5rem;">
+    <div class="card">
+      <div class="card-title">Portfolio Weight Distribution</div>
+      <div class="chart-img-wrap">
+        <img src="{{ url_for('static', filename=chart_weights) }}" alt="Portfolio Weights" loading="lazy"/>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Stock Correlation Matrix</div>
+      <div class="chart-img-wrap">
+        <img src="{{ url_for('static', filename=chart_correlation) }}" alt="Correlation Matrix" loading="lazy"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="card">
+      <div class="card-title">Goal Projection Chart</div>
+      <div class="chart-img-wrap">
+        <img src="{{ url_for('static', filename=chart_projection) }}" alt="Goal Projection" loading="lazy"/>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Portfolio Analysis Dashboard</div>
+      <div class="chart-img-wrap">
+        <img src="{{ url_for('static', filename=chart_dashboard) }}" alt="Dashboard" loading="lazy"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ This is not financial advice. Past performance does not guarantee future results.
+    Consult a SEBI-registered investment advisor before making investment decisions.
+  </div>
+
+</main>
+
+<script>
+// ── Data from Flask ────────────────────────────────────────────────────────
+const equityPct  = {{ equity_pct_raw }};
+const debtPct    = {{ debt_pct_raw }};
+const yearLabels = {{ yearly_labels | tojson }};
+const yearCorpus = {{ yearly_corpus | tojson }};
+const yearInvested = {{ yearly_invested | tojson }};
+
+// ── Chart defaults ─────────────────────────────────────────────────────────
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ── Pie Chart: Equity vs Debt ──────────────────────────────────────────────
+new Chart(document.getElementById('pieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Equity', 'Debt / FD'],
+    datasets: [{
+      data: [equityPct, debtPct],
+      backgroundColor: ['rgba(0,229,160,0.8)', 'rgba(14,165,233,0.8)'],
+      borderColor: ['#00e5a0', '#0ea5e9'],
+      borderWidth: 2,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 }
+      },
+      tooltip: {
+        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw.toFixed(0)}%` }
+      }
+    }
+  }
+});
+
+// ── Line Chart: Corpus Growth ──────────────────────────────────────────────
+new Chart(document.getElementById('corpusChart'), {
+  type: 'line',
+  data: {
+    labels: yearLabels,
+    datasets: [
+      {
+        label: 'Expected Corpus',
+        data: yearCorpus,
+        borderColor: '#00e5a0',
+        backgroundColor: 'rgba(0,229,160,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: '#00e5a0',
+        fill: true,
+        tension: 0.35,
+      },
+      {
+        label: 'Amount Invested',
+        data: yearInvested,
+        borderColor: '#f59e0b',
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        grid: { color: 'rgba(30,45,69,0.5)' },
+        ticks: { maxTicksLimit: 6 }
+      },
+      y: {
+        grid: { color: 'rgba(30,45,69,0.5)' },
+        ticks: {
+          callback: v => '₹' + (v >= 100000 ? (v/100000).toFixed(1)+'L' : (v/1000).toFixed(0)+'K')
+        }
+      }
+    },
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ₹${ctx.raw.toLocaleString('en-IN')}`
+        }
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>

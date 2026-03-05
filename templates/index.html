@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio AI — Goal-Based Investing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:       #0a0e17;
+      --surface:  #111827;
+      --border:   #1e2d45;
+      --accent:   #00e5a0;
+      --accent2:  #0ea5e9;
+      --warn:     #f59e0b;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --font:     'Syne', sans-serif;
+      --mono:     'DM Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+      z-index: 0;
+    }
+
+    /* Glowing orbs */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0,229,160,0.08);
+      border: 1px solid rgba(0,229,160,0.25);
+      border-radius: 100px;
+      padding: 0.4rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .logo-badge::before {
+      content: '◆';
+      font-size: 0.6rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 400;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 1rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,160,0.12);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+
+    select option {
+      background: var(--surface);
+    }
+
+    /* Two-col grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Risk selector */
+    .risk-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .risk-option {
+      position: relative;
+    }
+
+    .risk-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+
+    .risk-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: none;
+      letter-spacing: 0;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .risk-option label .icon { font-size: 1.2rem; }
+
+    .risk-option input:checked + label {
+      border-color: var(--accent);
+      background: rgba(0,229,160,0.08);
+      color: var(--accent);
+      box-shadow: 0 0 12px rgba(0,229,160,0.15);
+    }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--accent) 0%, #00b87a 100%);
+      color: #0a0e17;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,229,160,0.3);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Loading overlay */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,14,23,0.92);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    .loading-overlay.active { display: flex; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    .loading-steps {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    /* Error */
+    .error-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: #fca5a5;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">RUNNING ML PIPELINE...</div>
+  <div class="loading-steps" id="loadingSteps">
+    Fetching market data...<br>
+    Engineering features...<br>
+    Clustering risk buckets...<br>
+    Predicting returns (LightGBM)...<br>
+    Optimizing portfolio weights...
+  </div>
+</div>
+
+<div class="wrapper">
+  <div class="header">
+    <div class="logo-badge">ML Portfolio Engine v2.0</div>
+    <h1>Goal-Based<br>Investing AI</h1>
+    <p class="subtitle">NSE large-caps · LightGBM returns · Markowitz optimization</p>
+  </div>
+
+  {% if error %}
+  <div class="error-box">⚠ Pipeline error: {{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <form action="/predict" method="POST" id="portfolioForm">
+
+      <p class="section-label">Investment Details</p>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Lump Sum Amount (₹)</label>
+          <input type="number" name="amount" value="100000" min="10000" step="1000" required/>
+        </div>
+        <div class="form-group">
+          <label>Monthly SIP (₹)</label>
+          <input type="number" name="sip" value="0" min="0" step="500"/>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Investment Horizon (Years)</label>
+          <input type="number" name="years" value="5" min="1" max="40" required/>
+        </div>
+        <div class="form-group">
+          <label>Goal Type</label>
+          <select name="goal">
+            <option value="savings">💰 Savings</option>
+            <option value="retirement">🏖 Retirement</option>
+            <option value="fire">🔥 FIRE</option>
+            <option value="education">🎓 Education</option>
+            <option value="marriage">💍 Marriage</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <p class="section-label">Risk Appetite</p>
+
+      <div class="form-group">
+        <div class="risk-group">
+          <div class="risk-option">
+            <input type="radio" name="risk" id="risk-low" value="Low"/>
+            <label for="risk-low"><span class="icon">🛡</span>Low</label>
+          </div>
+          <div class="risk-option">
+            <input type="radio" name="risk" id="risk-med" value="Medium" checked/>
+            <label for="risk-med"><span class="icon">⚖</span>Medium</label>
+          </div>
+          <div class="risk-option">
+            <input type="radio" name="risk" id="risk-high" value="High"/>
+            <label for="risk-high"><span class="icon">🚀</span>High</label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        Analyse Portfolio →
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('portfolioForm').addEventListener('submit', function() {
+    document.getElementById('loadingOverlay').classList.add('active');
+    document.getElementById('submitBtn').disabled = true;
+
+    // Cycle through loading messages
+    const messages = [
+      "Fetching NSE market data...",
+      "Engineering 18 features per stock...",
+      "KMeans risk clustering...",
+      "LightGBM return prediction...",
+      "Ledoit-Wolf covariance estimation...",
+      "Optimizing 50 candidate portfolios...",
+      "Running Monte Carlo simulations...",
+      "Building your allocation table..."
+    ];
+    let i = 0;
+    const el = document.getElementById('loadingSteps');
+    setInterval(() => {
+      el.innerHTML = messages[i % messages.length];
+      i++;
+    }, 1800);
+  });
+</script>
+
+</body>
+</html>

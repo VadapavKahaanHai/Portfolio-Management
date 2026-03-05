@@ -4,6 +4,7 @@ import sys as _sys, os as _os
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 _os.chdir(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
+ import matplotlib matplotlib.use('Agg')
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -144,7 +145,8 @@ def plot_correlation_heatmap(
 def plot_risk_dashboard(
     portfolios: list[dict],
     allocation: pd.DataFrame,
-    save_path: str = "outputs/dashboard.png",
+    save_path: str = "static/plots/dashboard.png",
+    # save_path: str = "outputs/dashboard.png",
 ):
     """4-panel dashboard: weights, risk contrib, metrics comparison, sector."""
     p = portfolios[0]
