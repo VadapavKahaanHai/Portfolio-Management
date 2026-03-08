@@ -1,0 +1,101 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio AI — Goal-Based Investing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">RUNNING ML PIPELINE...</div>
+  <div class="loading-steps" id="loadingSteps">
+    Fetching market data...<br>
+    Engineering features...<br>
+    Clustering risk buckets...<br>
+    Predicting returns (LightGBM)...<br>
+    Optimizing portfolio weights...
+  </div>
+</div>
+
+<div class="wrapper">
+  <div class="header">
+    <div class="logo-badge">ML Portfolio Engine v2.0</div>
+    <h1>Goal-Based<br>Investing AI</h1>
+    <p class="subtitle">NSE large-caps · LightGBM returns · Markowitz optimization</p>
+  </div>
+
+  {% if error %}
+  <div class="error-box">⚠ Pipeline error: {{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <form action="/predict" method="POST" id="portfolioForm">
+
+      <p class="section-label">Investment Details</p>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Lump Sum Amount (₹)</label>
+          <input type="number" name="amount" value="100000" min="10000" step="1000" required/>
+        </div>
+        <div class="form-group">
+          <label>Monthly SIP (₹)</label>
+          <input type="number" name="sip" value="0" min="0" step="500"/>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Investment Horizon (Years)</label>
+          <input type="number" name="years" value="5" min="1" max="40" required/>
+        </div>
+        <div class="form-group">
+          <label>Goal Type</label>
+          <select name="goal">
+            <option value="savings">💰 Savings</option>
+            <option value="retirement">🏖 Retirement</option>
+            <option value="fire">🔥 FIRE</option>
+            <option value="education">🎓 Education</option>
+            <option value="marriage">💍 Marriage</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <p class="section-label">Risk Appetite</p>
+
+      <div class="form-group">
+        <div class="risk-group">
+          <div class="risk-option">
+            <input type="radio" name="risk" id="risk-low" value="Low"/>
+            <label for="risk-low"><span class="icon">🛡</span>Low</label>
+          </div>
+          <div class="risk-option">
+            <input type="radio" name="risk" id="risk-med" value="Medium" checked/>
+            <label for="risk-med"><span class="icon">⚖</span>Medium</label>
+          </div>
+          <div class="risk-option">
+            <input type="radio" name="risk" id="risk-high" value="High"/>
+            <label for="risk-high"><span class="icon">🚀</span>High</label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        Analyse Portfolio →
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

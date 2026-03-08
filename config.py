@@ -1,8 +1,20 @@
 # config.py — Central configuration for the ML Portfolio Pipeline
 
-# ─────────────────────────────────────────────
-# UNIVERSE: 50 NSE stocks across major sectors
-# ─────────────────────────────────────────────
+
+# Database Setup
+
+DB_NAME     = "portfolio_db"
+DB_USER     = "postgres"
+DB_PASSWORD = "yourpassword"
+DB_HOST     = "localhost"
+DB_PORT     = "5432"
+
+# Airflow Setup 
+
+AIRFLOW_ADMIN_USERNAME = "admin"
+AIRFLOW_ADMIN_PASSWORD = "admin"
+AIRFLOW_ADMIN_EMAIL    = "admin@example.com"
+
 STOCK_UNIVERSE = [
     # IT (5)
     "TCS.NS", "INFY.NS", "WIPRO.NS", "HCLTECH.NS", "TECHM.NS",
@@ -27,17 +39,13 @@ STOCK_UNIVERSE = [
     "HDFCLIFE.NS", "SBILIFE.NS", "BHARTIARTL.NS",
 ]
 
-INDEX_TICKER   = "^NSEI"          # NIFTY 50
+
+# Data Setup
+
+INDEX_TICKER   = "^NSEI"       
 # RISKFREE_RATE  = 0.045          # ~6.5% (current Indian 10yr yield)
 RISKFREE_RATE  = 0.065   # Indian 10-yr G-Sec yield ~6.5% (2024)
-
-# ─────────────────────────────────────────────
-# DATA
-# ─────────────────────────────────────────────
-DATA_START      = "2018-01-01"
-DATA_END        = "2025-12-31"   # or use: pd.Timestamp.today().strftime("%Y-%m-%d")
-DATA_DIR        = "data/"
-MISSING_THRESH  = 0.05            # drop stock if >5% data missing
+MISSING_THRESH  = 0.1            # drop stock if >5% data missing
 MIN_PRICE       = 10.0            # penny stock filter (₹)
 MIN_AVG_VOLUME  = 100_000         # avg daily volume filter
 

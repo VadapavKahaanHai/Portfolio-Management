@@ -1,18 +1,173 @@
-# Ignore everything inside portfolio
-portfolio/*
-
-# Allow these specific files
-!portfolio/allocator.py
-!portfolio/goals.py
-!portfolio/optimizer.py
-
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 __pycache__/
+*.pyc
 
-#  Data files (too large for git)
-data/*.parquet
+# Virtual Environment
+pm/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+pyvenv.cfg
 
-# Trained models
-models/*.pkl
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static_root
 
-# Outputs
-outputs/
+# Django migrations (optional - uncomment if you want to ignore)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Flask
+instance/
+.webassets-cache
+
+# Airflow
+astro/.env
+astro/.astro/
+astro/airflow_settings.yaml
+astro/logs/
+astro/plugins/__pycache__/
+astro/dags/__pycache__/
+airflow.cfg
+airflow.db
+airflow-webserver.pid
+unittests.cfg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+*.cover
+*.py,cover
+.hypothesis/
+coverage.xml
+*.coveragerc
+nosetests.xml
+test-results/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.spyderproject
+.spyproject
+.ropeproject
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+!example.env
+
+# OS specific
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# ML/Data Science
+*.h5
+*.pkl
+*.pickle
+*.joblib
+*.model
+*.weights
+data/
+datasets/
+models/
+checkpoints/
+*.csv
+*.parquet
+*.feather
+
+# Documentation
+docs/_build/
+site/
+
+# Node (if using frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Secrets and credentials
+secrets/
+*.pem
+*.key
+*.cert
+credentials.json
+serviceAccountKey.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# Config files with sensitive data
+config.ini
+config.local.py
+settings_local.py
