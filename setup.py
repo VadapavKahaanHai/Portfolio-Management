@@ -45,7 +45,8 @@ def create_database():
 
 def run_django_setup():
     print("Running Django migrations...")
-    django_dir = os.path.join(os.path.dirname(__file__), "django_app")
+    django_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ml_portfolio")
+    print(django_dir)
     run("python manage.py migrate", cwd=django_dir)
 
     print("Creating Django superuser...")

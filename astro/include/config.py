@@ -5,7 +5,7 @@
 
 DB_NAME     = "portfolio_db"
 DB_USER     = "postgres"
-DB_PASSWORD = "yourpassword"
+DB_PASSWORD = "champak"
 DB_HOST     = "host.docker.internal"
 DB_PORT     = "5432"
 
@@ -24,7 +24,7 @@ STOCK_UNIVERSE = [
     # FMCG (5)
     "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "DABUR.NS",
     # Auto (5)
-    "MARUTI.NS", "TATAMOTORS.NS", "BAJAJ-AUTO.NS", "HEROMOTOCO.NS", "EICHERMOT.NS",
+    "MARUTI.NS", "BAJAJ-AUTO.NS", "HEROMOTOCO.NS", "EICHERMOT.NS",
     # Pharma / Health (5)
     "SUNPHARMA.NS", "DRREDDY.NS", "CIPLA.NS", "DIVISLAB.NS", "APOLLOHOSP.NS",
     # Energy / Oil (5)
