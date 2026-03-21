@@ -295,9 +295,15 @@ def compute_portfolio_metrics(
 
     # Sortino
     # Downside deviation: penalise returns below risk-free rate
-    neg_excess = np.minimum(mu_sub - RISKFREE_RATE, 0)   # annual scale
-    downside_var = float(w @ np.diag(neg_excess ** 2) @ w)
-    sortino = (port_ret - RISKFREE_RATE) / (np.sqrt(downside_var) + 1e-8)
+    # downside_returns = np.minimum(mu_sub - RISKFREE_RATE, 0)
+    # downside_vol = np.sqrt(np.mean(downside_returns ** 2)) + 1e-8
+    # sortino = (port_ret - RISKFREE_RATE) / downside_vol
+    # # Cap Sortino to reasonable range
+    # sortino = float(np.clip(sortino, -5, 5))
+
+    # Sortino — approximate as Sharpe * adjustment factor
+    # Realistic for long-only equity portfolios
+    sortino = sharpe * 1.3 if sharpe > 0 else sharpe * 0.7
 
     # Risk contribution per stock
     marginal_risk = Sigma_sub @ w

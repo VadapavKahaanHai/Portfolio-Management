@@ -50,6 +50,31 @@ def run_pipeline_for_web(amount: float, risk: str, goal: str, years: int, sip: f
         force_refresh    = False,
     )
 
+    # import shutil
+    # os.makedirs("static/plots", exist_ok=True)
+    # for src, dst in [
+    #     ("outputs/weights_best.png",   "static/plots/weights.png"),
+    #     ("outputs/correlation.png",    "static/plots/correlation.png"),
+    #     ("outputs/dashboard.png",      "static/plots/dashboard.png"),
+    #     ("outputs/goal_projection.png","static/plots/goal_projection.png"),
+    # ]:
+    #     if os.path.exists(src):
+    #         shutil.copy(src, dst)
+
+    import shutil
+    os.makedirs("static/plots", exist_ok=True)
+    for src, dst in [
+        ("outputs/weights_best.png",   "static/plots/weights.png"),
+        ("outputs/correlation.png",    "static/plots/correlation.png"),
+        ("outputs/dashboard.png",      "static/plots/dashboard.png"),
+        ("outputs/goal_projection.png","static/plots/goal_projection.png"),
+    ]:
+        if os.path.exists(src):
+            shutil.copy(src, dst)
+            print(f"  ✓ Copied {src} → {dst}")
+        else:
+            print(f"  ✗ NOT FOUND: {src}")
+
     # ── Save charts to static/plots/ ─────────────────────────────────────────
     try:
         from utils.visualization import (
@@ -60,11 +85,10 @@ def run_pipeline_for_web(amount: float, risk: str, goal: str, years: int, sip: f
         ret = results  # full results dict
 
         plot_portfolio_weights(bp,  1, "static/plots/weights.png")
-        plot_correlation_heatmap(
-            ret["mu_hat"].to_frame(),           # pass returns if available
-            bp["stocks"][:20],
-            "static/plots/correlation.png"
-        )
+        # CORRECT — need actual returns DataFrame
+        from data.ingestion import run_ingestion
+        _, _, returns_df, _ = run_ingestion(force_refresh=False)
+        plot_correlation_heatmap(returns_df, bp["stocks"], "static/plots/correlation.png")
         plot_risk_dashboard(ret["top_portfolios"], ret["allocation"], "static/plots/dashboard.png")
         plot_goal_projection(ret["projection"],    ret["goal_config"], "static/plots/goal_projection.png")
     except Exception as e:
@@ -93,6 +117,11 @@ def run_pipeline_for_web(amount: float, risk: str, goal: str, years: int, sip: f
         for k, v in bp["risk_contrib"].sort_values(ascending=False).head(5).items()
     ]
 
+    # Calculate total invested including SIP (add this BEFORE the return)
+    total_invested_amount = amount + (sip * 12 * years)
+    equity_total = total_invested_amount * gc["equity_allocation"]
+    debt_total   = total_invested_amount * gc["debt_allocation"]
+
     return {
         # Key metrics
         "expected_return": f"{bp['expected_return']*100:.1f}",
@@ -102,14 +131,14 @@ def run_pipeline_for_web(amount: float, risk: str, goal: str, years: int, sip: f
         "sortino":         f"{bp['sortino']:.2f}",
 
         # Goal info
-        "goal_type":       goal,
+        "goal_type":        goal,
         "investment_years": years,
-        "effective_risk":  gc["effective_risk"],
-        "user_risk":       risk,
-        "equity_pct":      f"{gc['equity_allocation']*100:.0f}",
-        "debt_pct":        f"{gc['debt_allocation']*100:.0f}",
-        "equity_amount":   f"₹{results['equity_amount']:,.0f}",
-        "debt_amount":     f"₹{results['debt_amount']:,.0f}",
+        "effective_risk":   gc["effective_risk"],
+        "user_risk":        risk,
+        "equity_pct":       f"{gc['equity_allocation']*100:.0f}",
+        "debt_pct":         f"{gc['debt_allocation']*100:.0f}",
+        "equity_amount":    f"₹{equity_total:,.0f}",
+        "debt_amount":      f"₹{debt_total:,.0f}",
 
         # Corpus projection
         "total_invested":  f"₹{proj['total_invested']:,.0f}",
@@ -124,14 +153,14 @@ def run_pipeline_for_web(amount: float, risk: str, goal: str, years: int, sip: f
         "p90":  f"₹{proj['p90']:,.0f}",
 
         # Yearly data for Chart.js
-        "yearly_labels":  [str(r["year"]) for r in proj["yearly_projection"]],
-        "yearly_corpus":  [r["corpus"]    for r in proj["yearly_projection"]],
-        "yearly_invested":[r["invested"]  for r in proj["yearly_projection"]],
+        "yearly_labels":   [str(r["year"])  for r in proj["yearly_projection"]],
+        "yearly_corpus":   [r["corpus"]     for r in proj["yearly_projection"]],
+        "yearly_invested": [r["invested"]   for r in proj["yearly_projection"]],
 
         # Allocation table
-        "allocation":     alloc_rows,
-        "risk_contrib":   risk_contrib,
-        "n_stocks":       len(alloc_rows),
+        "allocation":  alloc_rows,
+        "risk_contrib": risk_contrib,
+        "n_stocks":    len(alloc_rows),
 
         # Charts
         "chart_weights":     "plots/weights.png",
@@ -142,6 +171,10 @@ def run_pipeline_for_web(amount: float, risk: str, goal: str, years: int, sip: f
         # Raw for pie chart
         "equity_pct_raw": gc["equity_allocation"] * 100,
         "debt_pct_raw":   gc["debt_allocation"]   * 100,
+
+        # SIP info
+        "monthly_sip":        sip,
+        "total_sip_invested": f"₹{sip * 12 * years:,.0f}",
     }
 
 
@@ -164,6 +197,7 @@ def predict():
         goal   = request.form.get("goal",   "savings")
         years  = int(request.form.get("years", 5))
         sip    = float(request.form.get("sip", 0))
+        print(f"  DEBUG: sip received = {sip}") 
 
         data = run_pipeline_for_web(amount, risk, goal, years, sip)
         return render_template("results.html", **data)

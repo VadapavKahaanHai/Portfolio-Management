@@ -369,6 +369,13 @@
       letter-spacing: 0.08em;
     }
 
+    {% if monthly_sip > 0 %}
+    <div class="proj-item">
+      <span class="proj-val" style="color:var(--accent2)">₹{{ monthly_sip }}/mo</span>
+      <span class="proj-label">SIP Included</span>
+    </div>
+    {% endif %}
+
     /* ── CONFIDENCE TABLE ───────────────────────────── */
     .conf-table {
       width: 100%;
@@ -555,6 +562,20 @@
           <span class="proj-label">Wealth Multiple</span>
         </div>
       </div>
+      {% if monthly_sip > 0 %}
+      <div style="
+        background: rgba(14,165,233,0.08);
+        border: 1px solid rgba(14,165,233,0.25);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        margin-top: 0.75rem;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--accent2);
+      ">
+        ✓ Includes ₹{{ monthly_sip|int }}/month SIP → {{ total_sip_invested }} total SIP contribution
+      </div>
+      {% endif %}
       <!-- Line Chart -->
       <div class="canvas-wrap">
         <canvas id="corpusChart"></canvas>
@@ -629,33 +650,32 @@
   </div>
 
   <!-- ROW 4: ML Charts from pipeline -->
-  <div class="main-grid" style="margin-bottom: 1.5rem;">
-    <div class="card">
-      <div class="card-title">Portfolio Weight Distribution</div>
-      <div class="chart-img-wrap">
-        <img src="{{ url_for('static', filename=chart_weights) }}" alt="Portfolio Weights" loading="lazy"/>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Stock Correlation Matrix</div>
-      <div class="chart-img-wrap">
-        <img src="{{ url_for('static', filename=chart_correlation) }}" alt="Correlation Matrix" loading="lazy"/>
-      </div>
+  <!-- ROW 4: ML Charts from pipeline — full width -->
+  <div class="card wide" style="margin-bottom:1.5rem;">
+    <div class="card-title">Portfolio Weight Distribution</div>
+    <div class="chart-img-wrap">
+      <img src="{{ url_for('static', filename=chart_weights) }}" alt="Portfolio Weights" loading="lazy"/>
     </div>
   </div>
 
-  <div class="main-grid">
-    <div class="card">
-      <div class="card-title">Goal Projection Chart</div>
-      <div class="chart-img-wrap">
-        <img src="{{ url_for('static', filename=chart_projection) }}" alt="Goal Projection" loading="lazy"/>
-      </div>
+  <div class="card wide" style="margin-bottom:1.5rem;">
+    <div class="card-title">Stock Correlation Matrix</div>
+    <div class="chart-img-wrap">
+      <img src="{{ url_for('static', filename=chart_correlation) }}" alt="Correlation Matrix" loading="lazy"/>
     </div>
-    <div class="card">
-      <div class="card-title">Portfolio Analysis Dashboard</div>
-      <div class="chart-img-wrap">
-        <img src="{{ url_for('static', filename=chart_dashboard) }}" alt="Dashboard" loading="lazy"/>
-      </div>
+  </div>
+
+  <div class="card wide" style="margin-bottom:1.5rem;">
+    <div class="card-title">Goal Projection Chart</div>
+    <div class="chart-img-wrap">
+      <img src="{{ url_for('static', filename=chart_projection) }}" alt="Goal Projection" loading="lazy"/>
+    </div>
+  </div>
+
+  <div class="card wide" style="margin-bottom:1.5rem;">
+    <div class="card-title">Portfolio Analysis Dashboard</div>
+    <div class="chart-img-wrap">
+      <img src="{{ url_for('static', filename=chart_dashboard) }}" alt="Dashboard" loading="lazy"/>
     </div>
   </div>
 
